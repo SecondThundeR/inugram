@@ -297,7 +297,7 @@ class PrivacySecurityActivity : SettingsPageActivity() {
                 SearchRegistry.Entry("biometric-confirm-delete-chat", R.string.InuBiometricConfirmDeleteChat, TOGGLE_BIOMETRIC_DELETE_CHAT),
                 SearchRegistry.Entry("biometric-confirm-logout", R.string.InuBiometricConfirmLogout, TOGGLE_BIOMETRIC_LOGOUT),
                 SearchRegistry.Entry("biometric-allow-device-credential", R.string.InuBiometricAllowDeviceCredential, TOGGLE_BIOMETRIC_DEVICE_CREDENTIAL),
-            ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) listOf(
+            ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && BiometricHelper.isSupported()) listOf(
                 SearchRegistry.Entry("biometric-require-confirmation-passcode", R.string.InuBiometricRequireConfirmationPasscode, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE),
                 SearchRegistry.Entry("biometric-require-confirmation-bots", R.string.InuBiometricRequireConfirmationBots, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS),
                 SearchRegistry.Entry("biometric-require-confirmation-actions", R.string.InuBiometricRequireConfirmationActions, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS),
