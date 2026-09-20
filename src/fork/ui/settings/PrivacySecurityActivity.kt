@@ -1,5 +1,6 @@
 package desu.inugram.ui.settings
 
+import android.os.Build
 import android.view.View
 import desu.inugram.InuConfig
 import desu.inugram.SearchRegistry
@@ -112,32 +113,35 @@ class PrivacySecurityActivity : SettingsPageActivity() {
                 )
             )
             items.add(UItem.asShadow(null))
-            items.add(UItem.asHeader(LocaleController.getString(R.string.InuBiometricExplicitConfirmation)))
-            items.add(
-                mkTwoLineCheckItem(
-                    TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE,
-                    R.string.InuBiometricRequireConfirmationPasscode,
-                    R.string.InuBiometricRequireConfirmationPasscodeInfo,
-                    InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE.value
+            // AndroidX ignores confirmationRequired before Android 10.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                items.add(UItem.asHeader(LocaleController.getString(R.string.InuBiometricExplicitConfirmation)))
+                items.add(
+                    mkTwoLineCheckItem(
+                        TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE,
+                        R.string.InuBiometricRequireConfirmationPasscode,
+                        R.string.InuBiometricRequireConfirmationPasscodeInfo,
+                        InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE.value
+                    )
                 )
-            )
-            items.add(
-                mkTwoLineCheckItem(
-                    TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS,
-                    R.string.InuBiometricRequireConfirmationBots,
-                    R.string.InuBiometricRequireConfirmationBotsInfo,
-                    InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_BOTS.value
+                items.add(
+                    mkTwoLineCheckItem(
+                        TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS,
+                        R.string.InuBiometricRequireConfirmationBots,
+                        R.string.InuBiometricRequireConfirmationBotsInfo,
+                        InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_BOTS.value
+                    )
                 )
-            )
-            items.add(
-                mkTwoLineCheckItem(
-                    TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS,
-                    R.string.InuBiometricRequireConfirmationActions,
-                    R.string.InuBiometricRequireConfirmationActionsInfo,
-                    InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS.value
+                items.add(
+                    mkTwoLineCheckItem(
+                        TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS,
+                        R.string.InuBiometricRequireConfirmationActions,
+                        R.string.InuBiometricRequireConfirmationActionsInfo,
+                        InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS.value
+                    )
                 )
-            )
-            items.add(UItem.asShadow(LocaleController.getString(R.string.InuBiometricExplicitConfirmationInfo)))
+                items.add(UItem.asShadow(LocaleController.getString(R.string.InuBiometricExplicitConfirmationInfo)))
+            }
         }
     }
 
@@ -293,10 +297,11 @@ class PrivacySecurityActivity : SettingsPageActivity() {
                 SearchRegistry.Entry("biometric-confirm-delete-chat", R.string.InuBiometricConfirmDeleteChat, TOGGLE_BIOMETRIC_DELETE_CHAT),
                 SearchRegistry.Entry("biometric-confirm-logout", R.string.InuBiometricConfirmLogout, TOGGLE_BIOMETRIC_LOGOUT),
                 SearchRegistry.Entry("biometric-allow-device-credential", R.string.InuBiometricAllowDeviceCredential, TOGGLE_BIOMETRIC_DEVICE_CREDENTIAL),
+            ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) listOf(
                 SearchRegistry.Entry("biometric-require-confirmation-passcode", R.string.InuBiometricRequireConfirmationPasscode, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE),
                 SearchRegistry.Entry("biometric-require-confirmation-bots", R.string.InuBiometricRequireConfirmationBots, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS),
                 SearchRegistry.Entry("biometric-require-confirmation-actions", R.string.InuBiometricRequireConfirmationActions, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS),
-            ),
+            ) else emptyList(),
         )
     }
 }
