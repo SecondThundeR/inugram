@@ -2,6 +2,7 @@ package desu.inugram.helpers.security
 
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -34,6 +35,13 @@ object BiometricHelper {
             return manager.canAuthenticate(BiometricManager.Authenticators.DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
         }
         return false
+    }
+
+    // confirmationRequired only affects passive biometrics, and AndroidX ignores it before Android 10
+    fun hasPassiveBiometricSensor(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        val pm = ApplicationLoader.applicationContext.packageManager
+        return pm.hasSystemFeature(PackageManager.FEATURE_FACE) || pm.hasSystemFeature(PackageManager.FEATURE_IRIS)
     }
 
     @JvmStatic

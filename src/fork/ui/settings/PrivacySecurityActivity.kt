@@ -1,6 +1,5 @@
 package desu.inugram.ui.settings
 
-import android.os.Build
 import android.view.View
 import desu.inugram.InuConfig
 import desu.inugram.SearchRegistry
@@ -26,6 +25,22 @@ class PrivacySecurityActivity : SettingsPageActivity() {
     override fun getTitle(): CharSequence = LocaleController.getString(R.string.InuPrivacySecurity)
 
     private var sourceRow: TextDetailSettingsCell? = null
+
+    private val requireConfirmationGroup = ExpandableBoolGroup(
+        LocaleController.getString(R.string.InuBiometricExplicitConfirmation),
+        listOf(
+            ExpandableBoolGroup.Option(
+                R.string.InuBiometricRequireConfirmationPasscode,
+                InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE
+            ),
+            ExpandableBoolGroup.Option(R.string.InuBiometricRequireConfirmationBots, InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_BOTS),
+            ExpandableBoolGroup.Option(
+                R.string.InuBiometricRequireConfirmationActions,
+                InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS
+            ),
+        ),
+        sectionId = SECTION_BIOMETRIC_REQUIRE_CONFIRMATION,
+    )
 
     override fun onResume() {
         super.onResume()
@@ -112,40 +127,17 @@ class PrivacySecurityActivity : SettingsPageActivity() {
                     InuConfig.BIOMETRIC_ALLOW_DEVICE_CREDENTIAL.value
                 )
             )
-            items.add(UItem.asShadow(null))
-            // AndroidX ignores confirmationRequired before Android 10.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                items.add(UItem.asHeader(LocaleController.getString(R.string.InuBiometricExplicitConfirmation)))
-                items.add(
-                    mkTwoLineCheckItem(
-                        TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE,
-                        R.string.InuBiometricRequireConfirmationPasscode,
-                        R.string.InuBiometricRequireConfirmationPasscodeInfo,
-                        InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE.value
-                    )
-                )
-                items.add(
-                    mkTwoLineCheckItem(
-                        TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS,
-                        R.string.InuBiometricRequireConfirmationBots,
-                        R.string.InuBiometricRequireConfirmationBotsInfo,
-                        InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_BOTS.value
-                    )
-                )
-                items.add(
-                    mkTwoLineCheckItem(
-                        TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS,
-                        R.string.InuBiometricRequireConfirmationActions,
-                        R.string.InuBiometricRequireConfirmationActionsInfo,
-                        InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS.value
-                    )
-                )
+            if (BiometricHelper.hasPassiveBiometricSensor()) {
+                requireConfirmationGroup.addTo(items) { listView.adapter.update(true) }
                 items.add(UItem.asShadow(LocaleController.getString(R.string.InuBiometricExplicitConfirmationInfo)))
+            } else {
+                items.add(UItem.asShadow(null))
             }
         }
     }
 
     override fun onClick(item: UItem, view: View, position: Int, x: Float, y: Float) {
+        if (requireConfirmationGroup.handleClick(item, view) { listView.adapter.update(true) }) return
         when (item.id) {
             BUTTON_PASSCODE -> presentFragment(PasscodeSettingsActivity())
             BUTTON_PARANOIA -> presentFragment(ParanoiaActivity())
@@ -177,21 +169,6 @@ class PrivacySecurityActivity : SettingsPageActivity() {
 
             TOGGLE_BIOMETRIC_LOGOUT -> {
                 val new = InuConfig.BIOMETRIC_CONFIRM_LOGOUT.toggle()
-                (view as? NotificationsCheckCell)?.isChecked = new
-            }
-
-            TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE -> {
-                val new = InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE.toggle()
-                (view as? NotificationsCheckCell)?.isChecked = new
-            }
-
-            TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS -> {
-                val new = InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_BOTS.toggle()
-                (view as? NotificationsCheckCell)?.isChecked = new
-            }
-
-            TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS -> {
-                val new = InuConfig.BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS.toggle()
                 (view as? NotificationsCheckCell)?.isChecked = new
             }
 
@@ -280,9 +257,7 @@ class PrivacySecurityActivity : SettingsPageActivity() {
         private val TOGGLE_BIOMETRIC_DELETE_CHAT = InuUtils.generateId()
         private val TOGGLE_BIOMETRIC_LOGOUT = InuUtils.generateId()
         private val TOGGLE_BIOMETRIC_DEVICE_CREDENTIAL = InuUtils.generateId()
-        private val TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE = InuUtils.generateId()
-        private val TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS = InuUtils.generateId()
-        private val TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS = InuUtils.generateId()
+        private val SECTION_BIOMETRIC_REQUIRE_CONFIRMATION = InuUtils.generateId()
 
         @JvmField val PAGE = SearchRegistry.Page(
             slug = "privacy-security",
@@ -297,10 +272,8 @@ class PrivacySecurityActivity : SettingsPageActivity() {
                 SearchRegistry.Entry("biometric-confirm-delete-chat", R.string.InuBiometricConfirmDeleteChat, TOGGLE_BIOMETRIC_DELETE_CHAT),
                 SearchRegistry.Entry("biometric-confirm-logout", R.string.InuBiometricConfirmLogout, TOGGLE_BIOMETRIC_LOGOUT),
                 SearchRegistry.Entry("biometric-allow-device-credential", R.string.InuBiometricAllowDeviceCredential, TOGGLE_BIOMETRIC_DEVICE_CREDENTIAL),
-            ) + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && BiometricHelper.isSupported()) listOf(
-                SearchRegistry.Entry("biometric-require-confirmation-passcode", R.string.InuBiometricRequireConfirmationPasscode, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_PASSCODE),
-                SearchRegistry.Entry("biometric-require-confirmation-bots", R.string.InuBiometricRequireConfirmationBots, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_BOTS),
-                SearchRegistry.Entry("biometric-require-confirmation-actions", R.string.InuBiometricRequireConfirmationActions, TOGGLE_BIOMETRIC_REQUIRE_CONFIRMATION_ACTIONS),
+            ) + if (BiometricHelper.isSupported() && BiometricHelper.hasPassiveBiometricSensor()) listOf(
+                SearchRegistry.Entry("biometric-require-confirmation", R.string.InuBiometricExplicitConfirmation, SECTION_BIOMETRIC_REQUIRE_CONFIRMATION),
             ) else emptyList(),
         )
     }
